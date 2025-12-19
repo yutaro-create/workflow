@@ -1,0 +1,149 @@
+{
+  "_comment": "これはworkflow-stateのテンプレートファイルです。実際の使用時は.claude/spec/workflow-state.jsonにコピーされます",
+  "project": {
+    "name": "",
+    "description": "",
+    "type": "",
+    "created_at": "",
+    "last_updated": ""
+  },
+  "workflow": {
+    "current_phase": "initialization",
+    "current_step": "project_definition",
+    "completed_phases": [],
+    "phase_history": [],
+    "error_log": [],
+    "retry_count": {}
+  },
+  "phases": {
+    "requirements": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "approval_status": null,
+      "approval_at": null,
+      "document_path": null,
+      "questions_asked": 0,
+      "questions_answered": 0,
+      "modifications": []
+    },
+    "analysis": {
+      "status": "locked",
+      "dependencies_met": false,
+      "started_at": null,
+      "completed_at": null,
+      "approval_status": null,
+      "approval_at": null,
+      "document_path": null,
+      "questions_asked": 0,
+      "questions_answered": 0,
+      "modifications": []
+    },
+    "design": {
+      "status": "locked",
+      "dependencies_met": false,
+      "started_at": null,
+      "completed_at": null,
+      "approval_status": null,
+      "approval_at": null,
+      "document_path": null,
+      "questions_asked": 0,
+      "questions_answered": 0,
+      "modifications": []
+    },
+    "tasks": {
+      "status": "locked",
+      "dependencies_met": false,
+      "started_at": null,
+      "completed_at": null,
+      "approval_status": null,
+      "approval_at": null,
+      "document_path": null,
+      "task_count": 0,
+      "estimated_hours": 0.0,
+      "modifications": []
+    }
+  },
+  "responses": {
+    "requirements": {
+      "project_purpose": null,
+      "target_users": null,
+      "main_features": [],
+      "constraints": {
+        "budget": null,
+        "timeline": null,
+        "technology": null
+      },
+      "success_criteria": [],
+      "out_of_scope": []
+    },
+    "analysis": {
+      "programming_language": null,
+      "framework": null,
+      "database": null,
+      "infrastructure": null,
+      "deployment_target": null,
+      "performance_requirements": {},
+      "security_requirements": {},
+      "integration_requirements": []
+    },
+    "design": {
+      "architecture_pattern": null,
+      "data_models": [],
+      "api_endpoints": [],
+      "authentication_method": null,
+      "error_handling_strategy": null,
+      "logging_strategy": null,
+      "caching_strategy": null
+    },
+    "tasks": {
+      "prioritization": null,
+      "parallel_tasks": [],
+      "critical_path": [],
+      "resource_allocation": {},
+      "risk_assessment": []
+    }
+  },
+  "documents": {
+    "requirements": {
+      "path": null,
+      "status": "not_created",
+      "version": "0.0",
+      "checksum": null
+    },
+    "tech_analysis": {
+      "path": null,
+      "status": "not_created",
+      "version": "0.0",
+      "checksum": null
+    },
+    "design": {
+      "path": null,
+      "status": "not_created",
+      "version": "0.0",
+      "checksum": null
+    },
+    "tasks": {
+      "path": null,
+      "status": "not_created",
+      "version": "0.0",
+      "checksum": null
+    },
+    "supplementary": []
+  },
+  "qa_history": {
+    "requirements": [],
+    "analysis": [],
+    "design": [],
+    "tasks": []
+  },
+  "metadata": {
+    "workflow_version": "1.0.0",
+    "schema_version": "1.0",
+    "last_checkpoint": null,
+    "execution_mode": "interactive",
+    "debug_mode": false,
+    "auto_approve": false,
+    "parallel_execution": true
+  }
+}

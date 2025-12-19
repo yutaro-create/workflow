@@ -1,0 +1,285 @@
+---
+# ワークフロー依存関係定義ファイル
+# このファイルは各フェーズ間の実行順序、前提条件、並行実行可能性を定義します
+
+version: "1.0"
+description: "プロジェクトワークフローの依存関係とルール定義"
+
+# フェーズ定義と依存関係
+phases:
+  # Phase 1: 要件定義
+  requirements:
+    name: "要件定義"
+    description: "プロジェクトの要件を明確化"
+    entry_point: "project-requirements.md"
+    prerequisites:
+      phases: []  # 最初のフェーズなので前提フェーズなし
+      documents: []  # 必須ドキュメントなし
+      conditions:
+        - type: "project_initialized"
+          required: true
+    outputs:
+      documents:
+        - "requirements.md"
+        - "qa/requirements-qa.md"
+      state_updates:
+        - "project.type"
+        - "responses.requirements"
+    can_parallel_with: []
+    blocks: ["analysis", "design", "tasks"]  # これらのフェーズをブロック
+    approval_required: true
+    rollback_allowed: true
+    retry_on_failure: true
+    max_retries: 3
+
+  # Phase 2: 技術調査・分析
+  analysis:
+    name: "技術調査・分析"
+    description: "技術スタックの選定と実現可能性の検証"
+    entry_point: "project-analysis.md"
+    prerequisites:
+      phases:
+        - phase: "requirements"
+          status: "approved"
+          error_message: "要件定義が承認されていません"
+      documents:
+        - path: ".claude/spec/requirements.md"
+          required: true
+          error_message: "要件定義書が見つかりません"
+      conditions:
+        - type: "requirements_complete"
+          check: "phases.requirements.approval_status == 'approved'"
+    outputs:
+      documents:
+        - "tech-analysis.md"
+        - "tech-stack.md"
+        - "qa/analysis-qa.md"
+      state_updates:
+        - "responses.analysis"
+        - "project.tech_stack"
+    can_parallel_with: ["documentation_planning"]
+    blocks: ["design", "tasks", "implementation"]
+    approval_required: true
+    rollback_allowed: true
+
+  # Phase 3: 詳細設計
+  design:
+    name: "詳細設計"
+    description: "システムアーキテクチャと詳細設計"
+    entry_point: "project-design.md"
+    prerequisites:
+      phases:
+        - phase: "requirements"
+          status: "approved"
+        - phase: "analysis"
+          status: "approved"
+          error_message: "技術調査が完了していません"
+      documents:
+        - path: ".claude/spec/requirements.md"
+          required: true
+        - path: ".claude/spec/tech-analysis.md"
+          required: true
+      conditions:
+        - type: "tech_stack_defined"
+          check: "project.tech_stack != null"
+    outputs:
+      documents:
+        - "design.md"
+        - "architecture.md"
+        - "data-models.md"
+        - "api-spec.md"
+        - "qa/design-qa.md"
+      state_updates:
+        - "responses.design"
+        - "project.architecture"
+    can_parallel_with: ["test_planning", "documentation"]
+    blocks: ["tasks", "implementation"]
+    approval_required: true
+    rollback_allowed: true
+    validation_required: true  # 設計の妥当性検証が必要
+
+  # Phase 4: タスク分解
+  tasks:
+    name: "実装タスク分解"
+    description: "実装タスクの詳細分解と見積もり"
+    entry_point: "project-tasks.md"
+    prerequisites:
+      phases:
+        - phase: "design"
+          status: "approved"
+          error_message: "詳細設計が承認されていません"
+      documents:
+        - path: ".claude/spec/design.md"
+          required: true
+        - path: ".claude/spec/architecture.md"
+          required: false  # オプション
+      conditions:
+        - type: "design_complete"
+          check: "phases.design.approval_status == 'approved'"
+    outputs:
+      documents:
+        - "tasks.md"
+        - "task-dependencies.md"
+        - "qa/tasks-qa.md"
+      state_updates:
+        - "responses.tasks"
+        - "project.task_count"
+        - "project.estimated_hours"
+    can_parallel_with: ["test_case_creation"]
+    blocks: []  # 最終フェーズなのでブロックなし
+    approval_required: true
+    rollback_allowed: true
+
+# 並行実行可能なオプションフェーズ
+optional_phases:
+  documentation_planning:
+    name: "ドキュメント計画"
+    can_start_after: ["analysis"]
+    can_run_with: ["design", "tasks"]
+    required: false
+
+  test_planning:
+    name: "テスト計画"
+    can_start_after: ["design"]
+    can_run_with: ["tasks"]
+    required: true  # プロジェクトタイプによる
+
+  test_case_creation:
+    name: "テストケース作成"
+    can_start_after: ["tasks"]
+    required: false
+
+# プロジェクトタイプ別のカスタマイズ
+project_types:
+  web_application:
+    required_phases: ["requirements", "analysis", "design", "tasks"]
+    optional_phases: ["test_planning", "documentation_planning"]
+    skip_phases: []
+    phase_customization:
+      design:
+        additional_outputs: ["ui-mockups.md", "user-flow.md"]
+      tasks:
+        additional_outputs: ["deployment-tasks.md"]
+
+  mobile_app:
+    required_phases: ["requirements", "analysis", "design", "tasks"]
+    optional_phases: ["ui_design", "user_testing_plan"]
+    skip_phases: ["server_deployment"]
+    phase_customization:
+      design:
+        additional_outputs: ["screens.md", "navigation-flow.md"]
+
+  scraping_system:
+    required_phases: ["requirements", "analysis", "tasks"]
+    optional_phases: ["design"]  # シンプルな場合はスキップ可能
+    skip_phases: ["ui_design"]
+    phase_customization:
+      analysis:
+        additional_outputs: ["target-site-analysis.md", "data-structure.md"]
+      tasks:
+        focus: "parser_implementation"
+
+  api_service:
+    required_phases: ["requirements", "analysis", "design", "tasks"]
+    optional_phases: ["load_testing_plan"]
+    skip_phases: ["ui_design"]
+    phase_customization:
+      design:
+        additional_outputs: ["endpoint-spec.md", "auth-flow.md"]
+
+# 条件分岐ルール
+conditional_rules:
+  # プロトタイプモード
+  - condition: "project.type == 'prototype'"
+    actions:
+      skip_phases: ["comprehensive_testing", "formal_documentation"]
+      reduce_questions: true
+      auto_approve: false  # それでも承認は必要
+
+  # 短期プロジェクト（1ヶ月未満）
+  - condition: "project.timeline < 30"
+    actions:
+      enable_rapid_mode: true
+      skip_phases: ["extensive_documentation"]
+      parallel_execution: ["design", "test_planning"]
+
+  # 低予算プロジェクト
+  - condition: "project.budget < 1000000"
+    actions:
+      use_templates: true
+      prefer_open_source: true
+      skip_phases: ["expensive_infrastructure_planning"]
+
+  # エンタープライズプロジェクト
+  - condition: "project.type == 'enterprise'"
+    actions:
+      require_phases: ["security_review", "compliance_check", "documentation"]
+      approval_required_all: true
+      validation_strict: true
+
+# エラーハンドリング
+error_handling:
+  dependency_not_met:
+    action: "block_execution"
+    message: "前提条件が満たされていません。詳細: {details}"
+    recovery: "show_required_steps"
+
+  document_not_found:
+    action: "prompt_regenerate"
+    message: "必要なドキュメントが見つかりません: {document}"
+    recovery: "regenerate_or_skip"
+
+  approval_rejected:
+    action: "rollback_to_phase"
+    message: "承認が却下されました。修正が必要です。"
+    recovery: "edit_and_resubmit"
+
+  phase_timeout:
+    action: "save_and_pause"
+    message: "フェーズがタイムアウトしました"
+    recovery: "resume_from_checkpoint"
+
+# 実行制御
+execution_control:
+  max_phase_duration: 7200  # 秒（2時間）
+  auto_save_interval: 300  # 5分ごとに自動保存
+  checkpoint_on_approval: true
+  allow_force_skip: false  # 強制スキップを許可しない
+  require_all_questions_answered: true
+  allow_parallel_approval: false
+
+# バリデーションルール
+validation:
+  requirements:
+    minimum_features: 1
+    required_fields: ["project_purpose", "target_users", "main_features"]
+
+  analysis:
+    required_fields: ["programming_language", "database", "infrastructure"]
+
+  design:
+    required_fields: ["architecture_pattern", "data_models", "api_endpoints"]
+    minimum_endpoints: 1
+
+  tasks:
+    minimum_tasks: 1
+    required_fields: ["prioritization", "critical_path"]
+    max_estimated_hours: 10000  # 異常値チェック
+
+# 通知設定
+notifications:
+  on_phase_complete:
+    message: "✅ {phase_name}が完了しました"
+    show_next_action: true
+
+  on_approval_required:
+    message: "📝 {phase_name}の承認が必要です"
+    show_summary: true
+
+  on_error:
+    message: "⚠️ エラーが発生しました: {error}"
+    show_recovery_options: true
+
+  on_workflow_complete:
+    message: "🎉 プロジェクト作成が完了しました！"
+    show_statistics: true
